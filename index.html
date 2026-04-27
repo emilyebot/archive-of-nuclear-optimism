@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Image Archive — Nuclear Optimism</title>
+    <title>A Visual Archive of Nuclear Optimism</title>
     <style>
       :root {
         --bg: #0f0f0e;
@@ -173,8 +173,8 @@
   </head>
   <body>
     <header>
-      <h1>Image Archive</h1>
-      <p>Two columns: chronological (left) and random order (right) — same images</p>
+      <h1>A Visual Archive of Nuclear Optimism</h1>
+      <p>a cultural signpost for the future civilizations</p>
     </header>
     <main class="dual" id="app">
       <div class="loading" style="grid-column: 1 / -1; padding: 2rem; text-align: center; color: var(--muted)">
@@ -261,7 +261,7 @@
         app.innerHTML = "";
         app.appendChild(buildColumn("Chronological", items));
         app.appendChild(
-          buildColumn("Random order · reshuffle on reload", randomItems),
+          buildColumn("Randomized", randomItems),
         );
       }
 
