@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Image Archive — Nuclear Optimism</title>
+    <style>
+      :root {
+        --bg: #0f0f0e;
+        --surface: #1a1917;
+        --text: #e8e6e1;
+        --muted: #9a968c;
+        --accent: #c4a574;
+        --rail: #2a2824;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+      }
+
+      body {
+        display: flex;
+        flex-direction: column;
+        background: var(--bg);
+        color: var(--text);
+        font-family: system-ui, "Segoe UI", Roboto, sans-serif;
+        font-size: 1rem;
+        line-height: 1.5;
+        overflow: hidden;
+      }
+
+      header {
+        flex: 0 0 auto;
+        z-index: 20;
+        padding: 1.25rem 1.5rem;
+        background: var(--bg);
+        border-bottom: 1px solid var(--rail);
+      }
+
+      header h1 {
+        margin: 0;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: clamp(1.35rem, 3vw, 1.75rem);
+        font-weight: 400;
+        letter-spacing: 0.02em;
+      }
+
+      header p {
+        margin: 0.35rem 0 0;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      main.dual {
+        flex: 1 1 auto;
+        min-height: 0;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0;
+      }
+
+      .column {
+        min-height: 0;
+        overflow-y: auto;
+        overflow-x: hidden;
+        border-right: 1px solid var(--rail);
+        padding: 0 0.75rem 2rem;
+      }
+
+      .column:last-child {
+        border-right: none;
+        border-left: 1px solid var(--rail);
+        margin-left: -1px;
+      }
+
+      .column-head {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        margin: 0 -0.75rem 1.25rem;
+        padding: 0.85rem 1rem;
+        background: color-mix(in srgb, var(--bg) 92%, transparent);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid var(--rail);
+        font-size: 0.8rem;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--accent);
+      }
+
+      .feed {
+        display: flex;
+        flex-direction: column;
+        gap: 2.5rem;
+        max-width: 920px;
+        margin: 0 auto;
+      }
+
+      @media (max-width: 720px) {
+        body {
+          overflow: auto;
+          height: auto;
+          min-height: 100vh;
+        }
+
+        main.dual {
+          grid-template-columns: 1fr;
+          min-height: auto;
+        }
+
+        .column {
+          max-height: 65vh;
+          border-right: none;
+          border-left: none;
+          margin-left: 0;
+          border-bottom: 1px solid var(--rail);
+        }
+
+        .column:last-child {
+          border-left: none;
+          margin-left: 0;
+          border-bottom: none;
+        }
+      }
+
+      figure {
+        margin: 0;
+        background: var(--surface);
+        border-radius: 4px;
+        overflow: hidden;
+        border: 1px solid var(--rail);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+      }
+
+      figure img {
+        display: block;
+        width: 100%;
+        height: auto;
+        vertical-align: middle;
+      }
+
+      figcaption {
+        padding: 0.85rem 1rem 1rem;
+        font-size: 0.88rem;
+        color: var(--muted);
+        border-top: 1px solid var(--rail);
+      }
+
+      figcaption .title {
+        color: var(--text);
+        font-weight: 500;
+      }
+
+      .error {
+        padding: 2rem;
+        text-align: center;
+        color: var(--muted);
+      }
+
+      .loading {
+        padding: 3rem;
+        text-align: center;
+        color: var(--muted);
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Image Archive</h1>
+      <p>Two columns: chronological (left) and random order (right) — same images</p>
+    </header>
+    <main class="dual" id="app">
+      <div class="loading" style="grid-column: 1 / -1; padding: 2rem; text-align: center; color: var(--muted)">
+        Loading archive…
+      </div>
+    </main>
+    <script src="gallery-data.js"></script>
+    <script>
+      function captionFromFilename(name) {
+        const base = name.replace(/\.[^.]+$/, "");
+        return base.replace(/^(\d{3,4}-?),\s*/, "").trim() || base;
+      }
+
+      function yearHint(name) {
+        const m = name.match(/^(\d{3,4})(?:,|-)/);
+        if (!m) return "";
+        const d = m[1];
+        if (d.length === 3 && name[d.length] === "-") return d + "0s (approx.)";
+        return d;
+      }
+
+      function shuffleInPlace(arr) {
+        for (let i = arr.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+      }
+
+      function createFigure(item) {
+        const path = item.path || item.file;
+        const file = item.file || path.split("/").pop();
+        const fig = document.createElement("figure");
+        const img = document.createElement("img");
+        img.src = encodeURI(path);
+        img.alt = captionFromFilename(file);
+        img.loading = "lazy";
+        img.decoding = "async";
+        const cap = document.createElement("figcaption");
+        const yr = yearHint(file);
+        const title = document.createElement("span");
+        title.className = "title";
+        title.textContent = captionFromFilename(file);
+        cap.appendChild(title);
+        if (yr) {
+          cap.appendChild(document.createTextNode(" · "));
+          cap.appendChild(document.createTextNode(yr));
+        }
+        fig.appendChild(img);
+        fig.appendChild(cap);
+        return fig;
+      }
+
+      function buildColumn(label, itemList) {
+        const col = document.createElement("div");
+        col.className = "column";
+        const head = document.createElement("div");
+        head.className = "column-head";
+        head.textContent = label;
+        const feed = document.createElement("div");
+        feed.className = "feed";
+        for (const item of itemList) {
+          feed.appendChild(createFigure(item));
+        }
+        col.appendChild(head);
+        col.appendChild(feed);
+        return col;
+      }
+
+      function init() {
+        const app = document.getElementById("app");
+        const items = window.GALLERY_MANIFEST;
+        if (!Array.isArray(items) || items.length === 0) {
+          app.innerHTML = "";
+          const err = document.createElement("div");
+          err.className = "error";
+          err.style.gridColumn = "1 / -1";
+          err.textContent =
+            "No manifest found. Run: python3 tools/generate-manifest.py";
+          app.appendChild(err);
+          return;
+        }
+        const randomItems = shuffleInPlace(items.map((x) => ({ ...x })));
+        app.innerHTML = "";
+        app.appendChild(buildColumn("Chronological", items));
+        app.appendChild(
+          buildColumn("Random order · reshuffle on reload", randomItems),
+        );
+      }
+
+      init();
+    </script>
+  </body>
+</html>
